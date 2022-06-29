@@ -14,6 +14,8 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", help="which model", type=str, default="Base")
+    parser.add_argument("--epochs", "-e", help="total epoch", type=int, default=100)
+    parser.add_argument("--step", "-s", help="print step", type=int, default=10)
     args = parser.parse_args()
     return args
 
@@ -22,7 +24,6 @@ def train():
 
     train_data = StockDataset('dataset/data.csv', 5, is_test=False)
     test_data = StockDataset('dataset/data.csv', 5, is_test=True)
-    print_step = 10
 
     train_loader = DataLoader(train_data, batch_size=256, shuffle=False, num_workers=2)
     test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=2)
@@ -42,9 +43,8 @@ def train():
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-
-    min_loss = 99999
-    for epoch in range(100):
+    min_loss = float("inf")
+    for epoch in range(args.epochs):
         print(f'epoch:{epoch}')
         running_loss = 0.0
         for step, (data, label) in enumerate(train_loader):
@@ -55,7 +55,7 @@ def train():
             optimizer.step()
 
             running_loss += loss.item()
-            if step % print_step == 0:  # 每500个batch打印一次训练状态
+            if step % args.step == 0:
                 with torch.no_grad():
                     mse_loss = 0.0
                     for data, label in test_loader:
